@@ -674,11 +674,12 @@ def setup():
     glEnableClientState(GL_VERTEX_ARRAY)
     glEnableClientState(GL_NORMAL_ARRAY)
 
-# function to create robot from 
+# function to create robot from formatted json file
 def create_robot(filename):
     r = json.loads(open(filename).read(), object_hook=lambda d: objects.robot(d))
     return r
 
+# main function: creates a simulator window and loads the 'default' robot file
 def main(robotfile='default'):
     if robotfile == 'default':
         robotfile = '../robots/' + config.robot_file

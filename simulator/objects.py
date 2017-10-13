@@ -14,12 +14,13 @@ from operator import itemgetter
 globals()['PI'] = 3.14159265
 globals()['pi'] = PI
 
+# class which defines a joint
 class link():
     def __init__(self, name, parent):
         self.name = name
         self.parent = parent
         self.index = int(name[0])
-        
+
         self.pos = eval('parent.P' + name)
         self.P = self.pos
 
@@ -33,21 +34,21 @@ class link():
             n = str(self.index + 1)
             self.q = eval('parent.q' + n)
             self.h = eval('parent.h' + n)
-            
+
         self.axis = self.h
-        
+
     def __str__(self):
         return "link: " + self.name + ", q: " + str(self.q) + ", h: " + str(self.h) + ", p: " + str(self.P)
-    
+
     def is_prismatic(self):
         return 'q' in self.parent.syms['P' + self.name]
 
     def is_rotational(self):
         return 'rot' in self.parent.syms['R' + self.name]
-    
+
     def location(self):
         return self.parent.verts[self.index]
-    
+
 class robot(object):
     def __init__(self, d):
         self.trace = []
@@ -59,7 +60,7 @@ class robot(object):
     def init_params(self, d=None):
         if d is None:
             d = self.d
-        
+
         t = self.t
 
         # establish local vars, pick out syms
@@ -78,11 +79,11 @@ class robot(object):
                 locals()[k] = eval(v)
             except:
                 pass
-                
+
         x = [1, 0, 0]
         y = [0, 1, 0]
         z = [0, 0, 1]
-                
+
         self._d = {}
         for k, v in d.iteritems():
             if k[0] == 'N':
@@ -99,41 +100,41 @@ class robot(object):
 
             # it is a vector
             if v[0] == '[':
-                
+
                 tmp = eval(v)
-                
+
                 # joint axis or position vector
                 if k[0] == 'h' or k[0] == 'P':
                     # transpose
                     v = array([[tmp[0], tmp[1], tmp[2]]], float).T
             self._d[k] = v
-        
+
         # eval syms
         self.eval_syms()
         self.build_lists()
-        
+
     def build_lists(self):
         self.joint_axes = []
         self.joint_params = []
         self.joint_geoms = []
-        
+
         for i in range(1, self.N + 1):
             self.joint_axes.append(eval('self.h' + str(i)))
             self.joint_params.append(eval('self.q' + str(i)))
             self.joint_geoms.append(eval('self.l' + str(i)))
-        
+
         self.links = []
         indexes = []
         for i in range(0, self.N):
             indexes.append(str(i) + str(i + 1))
         indexes.append(str(self.N) + 'T')
-        
+
         c = 1
         for i in indexes:
             l = eval('link(\'' + i + '\', self)')
             self.links.append(l)
             c += 1
-        
+
     def eval_syms(self, omit_q=False):
         t = self.t
         x = array([[1], [0], [0]], float)
@@ -165,7 +166,7 @@ class robot(object):
                     tmp = v
                 self._d[k] = eval(tmp)
         self.sync_d()
-    
+
     def sync_d(self):
         for k, v in self._d.iteritems():
             setattr(self, k, v)
@@ -174,7 +175,7 @@ class robot(object):
         self.t += scale
         self.eval_syms()
         self.build_lists()
-    
+
     # get any arbitrary rotation matrix, e.g. self.R(0,3) will give you R03
     def R(self, base_index = 0, final_index = 'T'):
         if final_index == 'T':
@@ -185,38 +186,41 @@ class robot(object):
         for i in range(base_index, n):
             R = dot(R, self.links[i].R)
         return R
-    
+
     # force the robot to be at this timestep and joint angles
     def to_pos(self, angles):
         for i in range(self.N):
             exec 'self._d[\'q' + str(i+1) + '\'] = ' + str(angles[i])
-        
+
         self.eval_syms(omit_q=True)
         self.build_lists()
-        
+
+    # forward kinematics method for updating robot positioning
     def forwardkin(self):
+        # rotation matrix
         self.R0T = eye(3, 3)
+        # position matrix
         self.P0T = zeros((3, 1))
-        
+        #verticies (????)
         self.verts = []
-        
+
         # make R0T
         for link in self.links:
             self.R0T = dot(self.R0T, link.R)
-        
+
         # make P0T
         tmp = eye(3, 3)
         p = None
         for link in self.links:
             self.P0T += dot(tmp, link.P)
             tmp = dot(tmp, link.R)
-            
+
             p = (self.P0T[0][0], self.P0T[1][0], self.P0T[2][0])
             self.verts.append(p)
 
         if config.enable_trace:
             self.trace.append(self.verts)
-        
+
     def print_vars(self):
         print "=========== begin dump of robot vars ============"
         for k, v in self._d.iteritems():
@@ -230,7 +234,7 @@ class robot(object):
             R = link.R
             P = link.P
             h = link.h
-            
+
             if config.enable_lighting:
                 material.black()
             else:
@@ -248,13 +252,13 @@ class robot(object):
             glEnd()
 
             glTranslate(P[0], P[1], P[2])
-            
+
             if config.enable_axis:
                 if link.index != self.N:
                     display.draw_axes(20, str(link.index))
                 else:
                     display.draw_axes(20, 'T')
-            
+
             # draw joint
             if link.is_prismatic(): # prismatic joint
                 display.draw_prismatic_joint([[0], [0], [0]], link.q*link.h, 10)
@@ -268,7 +272,7 @@ class robot(object):
                     material.grey()
                 else:
                     glColor3f(0.3, 0.3, 0.3)
-                
+
                 glRotate(link.q * 180 / PI, link.h[0], link.h[1], link.h[2])
             elif (R == eye(3)).all(): # link - no joint
                 pass
@@ -279,7 +283,7 @@ class robot(object):
 
         glLineWidth(5)
         glPointSize(10)
-        
+
         # only save the last whatever points
         self.trace = self.trace[-config.max_trace:]
 
@@ -288,7 +292,7 @@ class robot(object):
                 material.grey()
             else:
                 glColor3f(0.4, 0.4, 0.4)
-            
+
             glPointSize(8)
             for verts, i in zip(self.trace, range(len(self.trace))):
                 if i % config.ghost_interval == 1:
@@ -301,14 +305,14 @@ class robot(object):
                 material.grey()
             else:
                 glColor3f(0.7, 0.7, 0.7)
-            
+
             for verts, i in zip(self.trace, range(len(self.trace))):
                 if i % config.ghost_interval == 1:
                     glBegin(GL_LINE_STRIP)
                     for vert in verts:
                         glVertex3f(vert[0], vert[1], vert[2])
                     glEnd()
-        
+
         if config.enable_trace:
             # saved tool positions
 
@@ -328,14 +332,14 @@ class room(object):
         self.width = width
         self.height = height
         self.outLined = outLined
-        
+
         # this gets set by the simulator
         self.scale = None
-        
+
     def render(self):
         s = self.scale
         l = self.length
-        
+
         startL =- (l/s)/2
         endL = (l/s)/2
         startW =- (self.width/s)/2
@@ -366,12 +370,11 @@ class room(object):
                     y0 = j*s
                     x1 = (i + 1)*s
                     y1 = (j + 1)*s
-                    
+
                     glVertex3f(x0, y0, 0)
                     glVertex3f(x1, y0, 0)
                     glVertex3f(x1, y1, 0)
                     glVertex3f(x0, y1, 0)
-                    
+
                     # todo: draw other walls to make a room
         glEnd()
-
