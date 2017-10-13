@@ -137,7 +137,7 @@ class robot(object):
             self.links.append(l)
             c += 1
 
-    # evalueate symbolic varablies from input (??) 
+    # evalueate symbolic varablies from input (??)
     def eval_syms(self, omit_q=False):
         t = self.t
         x = array([[1], [0], [0]], float)
@@ -341,6 +341,7 @@ class room(object):
         # this gets set by the simulator
         self.scale = None
 
+    # render room (mobile floor and axes)
     def render(self):
         s = self.scale
         l = self.length

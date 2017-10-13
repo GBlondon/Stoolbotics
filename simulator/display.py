@@ -11,6 +11,7 @@ import config
 globals()['PI'] = 3.14159265
 globals()['pi'] = PI
 
+
 class point():
     def __init__(self, x, y, z, label=""):
         self.x = x
@@ -32,12 +33,12 @@ def draw_rotational_joint(startP, endP, r, link_rotation): #draws cylinder from 
 
     # This is the default direction for the cylinders to face in OpenGL - z axis
     z = numpy.array([0.0, 0.0, 1.0])
-    
+
     # Get diff between two points you want cylinder along
     startP = numpy.array(startP, float).transpose()[0]
     endP = numpy.array(endP, float).transpose()[0]
     p = startP - endP
-    
+
     # Get CROSS product (the axis of rotation)
     t = numpy.cross(z, p)
 
@@ -50,14 +51,14 @@ def draw_rotational_joint(startP, endP, r, link_rotation): #draws cylinder from 
         material.blue()
     else:
         glColor3f(0, 1.0, 1.0)
-    
+
     sides = r*5
     glTranslate(0, 0, -length/2)
     quad = gluNewQuadric()
     gluQuadricOrientation(quad, GLU_OUTSIDE);
     gluCylinder(quad, r, r, length, sides, 1);
     gluDeleteQuadric(quad)
-    
+
     draw_rotational_joint_endCap(r, sides)
     glTranslate(0, 0, length)
     draw_rotational_joint_endCap(r, sides)
@@ -104,10 +105,10 @@ def draw_prismatic_joint(startP, endP, size):
 
     # This is the default direction for the rectangular-prism to face in OpenGL - z axis
     z = [0.0, 0.0, -1.0]
-    
+
     # Get diff between two points you want rectangular-prism along
     p = numpy.array(startP - endP, float).transpose()[0]
-    
+
     # Get CROSS product (the axis of rotation)
     t = numpy.cross(z, p)
 
@@ -116,7 +117,7 @@ def draw_prismatic_joint(startP, endP, size):
     angle = 180 / PI * math.acos(numpy.dot(z, p) / length)
     # glTranslate(endP[0],endP[1],endP[2])
     glRotate(angle, t[0], t[1], t[2])
-    
+
     if (length < 5):
         length = 5
     length =- length
@@ -129,7 +130,7 @@ def draw_prismatic_joint(startP, endP, size):
 
     def quickv(v):
         glVertex3f(v[0], v[1], v[2])
-    
+
     v1 = (-size/2, -size/2, 0)
     v2 = (size/2, -size/2, 0)
     v3 = (-size/2, -size/2, length)
@@ -141,23 +142,23 @@ def draw_prismatic_joint(startP, endP, size):
 
     q1234 = [v2, v1, v4, v3, v6, v5, v8, v7, v2, v1]
     q56 = [v8, v6, v4, v2, v7, v5, v3, v1]
-    
+
     outline = [(v1, v2), (v2, v8), (v8, v7), (v7, v1)]
     outline += [(v1, v3), (v2, v4), (v7, v5), (v8, v6)]
     outline += [(v5, v6), (v6, v4), (v4, v3), (v3, v5)]
-    
+
     #Quads 1 2 3 4
     glBegin(GL_QUAD_STRIP)
     for v in q1234:
         quickv(v)
     glEnd()
-    
+
     #Quad 5 & 6
     glBegin(GL_QUADS)
     for v in q56:
         quickv(v)
     glEnd()
-    
+
     # outline
     glLineWidth(1.5)
 
@@ -170,10 +171,10 @@ def draw_prismatic_joint(startP, endP, size):
     for line in outline:
         quickv(line[0])
         quickv(line[1])
-    
+
     glEnd()
     glLineWidth(1.0)
-    
+
     glPopMatrix()
 
 def text_at_pos(x, y, z, text, font=GLUT_BITMAP_TIMES_ROMAN_24):
@@ -200,7 +201,7 @@ def draw_axes(axes_l = 10, number=''):
         glColor3f(1.0, 0, 0)
     glVertex3f(0, 0, 0)
     glVertex3f(axes_l, 0, 0)
-    
+
     # y axis, green
 
     if config.enable_lighting:
@@ -209,7 +210,7 @@ def draw_axes(axes_l = 10, number=''):
         glColor3f(0, 1.0, 0)
     glVertex3f(0, 0, 0)
     glVertex3f(0, axes_l, 0)
-    
+
     # z axis
 
     if config.enable_lighting:
@@ -220,11 +221,11 @@ def draw_axes(axes_l = 10, number=''):
     glVertex3f(0, 0, axes_l)
 
     glEnd()
-    
+
     glLineWidth(1.0)
-    
+
     offset = axes_l/7
-    
+
     text_at_pos(offset + axes_l, 0, 0, 'X' + number)
     text_at_pos(0, offset + axes_l, 0, 'Y' + number)
     text_at_pos(0, 0, offset + axes_l, 'Z' + number)
