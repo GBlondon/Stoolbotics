@@ -27,11 +27,12 @@ import tools.help as help
 globals()['PI'] = 3.14159265
 globals()['pi'] = PI
 
+# class containing mouse and relevent properties/data members
 class mouse():
     def __init__(self):
         self.x = None
         self.y = None
-        
+
         self.up = False
         self.down = False
         self.oldMouseDraggedX = None
@@ -40,13 +41,14 @@ class mouse():
         self.rightPressed = False
         self.leftPressed = False
 
+# class for simulator window and environment
 class simulator():
     def __init__(self, robot, room):
         self.robot = robot
         self.room = room
         self.mouse = mouse()
-        
-        # simulator /view dimensions
+
+        # simulator window/view dimensions
         self.width = 1000
         self.height = 600
         self.angleY = -135
@@ -57,14 +59,14 @@ class simulator():
         self.scale = 10
         self.zoom = 1.6
         self.room.scale = self.scale
-        
+
         # time
         self.tscale = .2
         self.t = 0.0
-        
+
         # modes
         self.skew_mode = False
-        
+
         # command line variables
         self.text = []
         self.prompt = ">> "
@@ -72,7 +74,7 @@ class simulator():
         self.cmd = ''
         self.cmd_selection = -1
         self.hide_cli = False
-        
+
         # aux message
         self.aux_msg_enabled = False
         self.aux_msg = ''
@@ -81,12 +83,13 @@ class simulator():
         self.robot.t = self.t
         self.robot.timestep()
         self.welcome()
-        
+
         self.file_pointer = None
         self.file = None
         self.state = 'halted'
         self.playback_index = 0
-        
+
+    # prints out welcome message in simulator window CLI
     def welcome(self):
         self.response_print('Welcome to stoolbotics!')
         self.response_print('')
@@ -103,7 +106,8 @@ class simulator():
         self.response_print('')
         self.response_print('')
         self.command_print('')
-        
+
+
     def timestep(self):
         if self.state == 'record':
             l = [str(self.t)]
@@ -144,7 +148,7 @@ class simulator():
             pass
         self.robot.t = self.t
         glutPostRedisplay()
-    
+
     def _updateMouse(self, x, y):
         self.mouse.oldMouseDraggedX = self.mouse.x
         self.mouse.oldMouseDraggedY = self.mouse.y
@@ -157,17 +161,17 @@ class simulator():
 
     def mouseDragged(self, x, y):
         self._updateMouse(x, y)
-        
+
         v1 = math.sin(self.angleX * pi / 180 )
         v2 = math.cos(self.angleY * pi / 180 )
-        
+
         changeX = v1*(x - self.mouse.oldMouseDraggedX)
         changeY = v2*(y - self.mouse.oldMouseDraggedY)
 
         # why are these mixed up? it breaks without it
         self.angleX += changeY
         self.angleY -= changeX
-        
+
         if (self.angleX < 180):
             self.angleX = 180
         if (self.angleX > 360):
@@ -184,14 +188,14 @@ class simulator():
         elif (button == 4): # Zoom out
             self.camera_zoom('out')
             return
-        
+
         # clear mouse object
         self.mouse.leftPressed = False
         self.mouse.middlePressed = False
         self.mouse.rightPressed = False
         self.up = False
         self.down = False
-        
+
         m = self.mouse
         s  = ''
         if state == GLUT_DOWN:
@@ -434,7 +438,7 @@ class simulator():
                 self.aux_msg_enabled, self.hide_cli = False, True
                 self.draw()
                 glutPostRedisplay()
-                
+
                 try:
                     s = glReadPixels(0, 0, self.width, self.height, GL_RGB, GL_UNSIGNED_BYTE)
                     img = Image.new('RGB', (self.width, self.height))
@@ -445,7 +449,7 @@ class simulator():
                     filename = config.save_path + "screendump" + strtime + ".png"
 
                     self.response_print('check out ' + filename + ' in the working directory')
-         
+
                     img2.save(filename)
                     self.aux_msg_enabled, self.hide_cli = cs1, cs2
                 except:
@@ -458,7 +462,7 @@ class simulator():
 
     def keyboard(self, key, x, y):
         self._updateMouse(x, y)
-        
+
         if self.skew_mode:
           self.skew_mode = True
           if key == 't':
@@ -502,7 +506,7 @@ class simulator():
                 self.hide_cli = False
                 self.aux_msg_enabled = False
         glutPostRedisplay()
-    
+
     def multiline_format(self, text):
         line = ''
         s = ''
@@ -515,40 +519,40 @@ class simulator():
                     s += ' '
                 line = word + ' '
         return s + line
-    
+
     def command_print(self, text):
         if len(text) < self.max_line_chr:
             b = text
         else:
             b = self.multiline_format(text)
         self.text.append(['c', b])
-        
+
     def response_print(self, text):
         if len(text) < self.max_line_chr:
             b = text
         else:
             b = self.multiline_format(text)
         self.text.append(['r', b])
-            
+
     def draw(self):
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
-        
+
         glPushMatrix()
-        
+
         #looking at x/y plane - down z axis
         glTranslatef(self.transX, self.transY, self.transZ)
-        
+
         glRotatef(self.angleY, 0.0, 1.0, 0.0)
         glRotatef(self.angleX, 1.0, 0.0, 0.0)
-        
+
         if config.floor_on:
             self.room.render()
-        
+
         glColor3f(0, 0, 0)
         #display.draw_axes(20, '1')
-        
+
         self.robot.render()
-        
+
         glPopMatrix()
 
         # reference axis
@@ -559,9 +563,9 @@ class simulator():
         glRotatef(self.angleY, 0.0, 1.0, 0.0)
         glRotatef(self.angleX, 1.0, 0.0, 0.0)
         display.draw_axes(self.zoom*13, '')
-        
+
         glPopMatrix()
-        
+
         if self.aux_msg_enabled:
             glPushMatrix()
             glTranslatef(-self.zoom*.094*self.width, -self.zoom*.094*self.height, 400.0)
@@ -570,29 +574,29 @@ class simulator():
             display.text_at_pos(0, self.zoom*1*3, 0, self.aux_msg, font=GLUT_BITMAP_9_BY_15)
             glPopMatrix()
             glPopMatrix()
-    
+
         if not self.hide_cli:
             self.render_cli()
-        
+
         glutSwapBuffers()
 
     def render_cli(self):
         glPushMatrix()
         glTranslatef(-self.zoom*.094*self.width, -self.zoom*.094*self.height, 400.0)
-        
+
         glColor4f(0.5, 0.5, 1.0, 0.4)
         x0 = -self.zoom*.0023*self.width
         y0 = -self.zoom*.0023*self.height # bottom left corner
         x1 = self.zoom*.065*self.width # width
         y1 = self.zoom*.19*self.height # height
-        
+
         glBegin(GL_QUADS)
         glVertex3f(x0, y0, -1)
         glVertex3f(x1, y0, -1)
         glVertex3f(x1, y1, -1)
         glVertex3f(x0, y1, -1)
         glEnd()
-        
+
         glColor4f(0.0, 0.0, 0.0, 1.0)
         screen_text = self.text[-100:]
         for text in screen_text:
@@ -636,6 +640,7 @@ class simulator():
         glMatrixMode(GL_MODELVIEW)
         glLoadIdentity()
 
+# function to setup simulator environment with OpenGL
 def setup():
     if config.enable_lighting:
         ambient = [1.0, 1.0, 1.0, 1.0]
@@ -669,6 +674,7 @@ def setup():
     glEnableClientState(GL_VERTEX_ARRAY)
     glEnableClientState(GL_NORMAL_ARRAY)
 
+# function to create robot from 
 def create_robot(filename):
     r = json.loads(open(filename).read(), object_hook=lambda d: objects.robot(d))
     return r
@@ -683,7 +689,7 @@ def main(robotfile='default'):
     glutInit()
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH)
     glutInitWindowSize(s.width, s.height)
-    glutInitWindowPosition(100, 100) 
+    glutInitWindowPosition(100, 100)
 
     glutCreateWindow('stoolbotics simulator')
 
