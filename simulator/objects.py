@@ -57,6 +57,7 @@ class robot(object):
 
         self.init_params(d)
 
+    # initialize robot with base parameters.
     def init_params(self, d=None):
         if d is None:
             d = self.d
@@ -113,6 +114,7 @@ class robot(object):
         self.eval_syms()
         self.build_lists()
 
+    # build list of robot parameters based on input parameters
     def build_lists(self):
         self.joint_axes = []
         self.joint_params = []
@@ -135,6 +137,7 @@ class robot(object):
             self.links.append(l)
             c += 1
 
+    # evalueate symbolic varablies from input (??) 
     def eval_syms(self, omit_q=False):
         t = self.t
         x = array([[1], [0], [0]], float)
@@ -197,7 +200,7 @@ class robot(object):
 
     # forward kinematics method for updating robot positioning
     def forwardkin(self):
-        # rotation matrix
+        # initialize rotation matrix
         self.R0T = eye(3, 3)
         # position matrix
         self.P0T = zeros((3, 1))
@@ -221,6 +224,7 @@ class robot(object):
         if config.enable_trace:
             self.trace.append(self.verts)
 
+    # dump text output of current robot variables
     def print_vars(self):
         print "=========== begin dump of robot vars ============"
         for k, v in self._d.iteritems():
@@ -229,6 +233,7 @@ class robot(object):
             print '\n'
         print "=========== end =============="
 
+    # uses OpenGL to render current state of the robot to the simulator window
     def render(self):
         for link in self.links:
             R = link.R
